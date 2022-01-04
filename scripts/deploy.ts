@@ -1,29 +1,26 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { NftMarketplace__factory, ERC721WithAccessControl__factory } from "../typechain-types";
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
+  const [owner] = await ethers.getSigners();
+  const tokenContract = await getTokenContract(owner);
+  const tokenFactory = new NftMarketplace__factory(owner);
+  const contract = await tokenFactory.deploy(tokenContract.address);
+  await contract.deployed();
 
-  // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
-
-  await greeter.deployed();
-
-  console.log("Greeter deployed to:", greeter.address);
+  console.log("NftWithAccess deployed to:", tokenContract.address);
+  console.log("NftMarketplace deployed to:", contract.address);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
+async function getTokenContract(owner: SignerWithAddress) {
+  const tokenFactory = new ERC721WithAccessControl__factory(owner);
+  const tokenContract = await tokenFactory.deploy("ENEFTI", "NFT");
+  await tokenContract.deployed();
+
+  return tokenContract;
+}
+
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
