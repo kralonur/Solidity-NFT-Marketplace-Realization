@@ -21,6 +21,7 @@ export interface ERC721Interface extends utils.Interface {
   functions: {
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
+    "c_0x6fe40b79(bytes32)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "name()": FunctionFragment;
@@ -36,6 +37,10 @@ export interface ERC721Interface extends utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "c_0x6fe40b79",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
@@ -65,6 +70,10 @@ export interface ERC721Interface extends utils.Interface {
 
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "c_0x6fe40b79",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
     data: BytesLike
@@ -153,6 +162,11 @@ export interface ERC721 extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -200,6 +214,11 @@ export interface ERC721 extends BaseContract {
 
   balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  c_0x6fe40b79(
+    c__0x6fe40b79: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<void>;
+
   getApproved(
     tokenId: BigNumberish,
     overrides?: CallOverrides
@@ -240,6 +259,11 @@ export interface ERC721 extends BaseContract {
     ): Promise<void>;
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     getApproved(
       tokenId: BigNumberish,
@@ -318,6 +342,11 @@ export interface ERC721 extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -366,6 +395,11 @@ export interface ERC721 extends BaseContract {
 
     balanceOf(
       owner: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

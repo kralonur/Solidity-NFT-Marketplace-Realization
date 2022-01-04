@@ -23,6 +23,8 @@ export interface ERC721WithAccessControlInterface extends utils.Interface {
     "MINTER_ROLE()": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
+    "c_0x6fe40b79(bytes32)": FunctionFragment;
+    "c_0xb22abe61(bytes32)": FunctionFragment;
     "createItem(address,string)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
@@ -54,6 +56,14 @@ export interface ERC721WithAccessControlInterface extends utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "c_0x6fe40b79",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "c_0xb22abe61",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "createItem",
     values: [string, string]
@@ -120,6 +130,14 @@ export interface ERC721WithAccessControlInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "c_0x6fe40b79",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "c_0xb22abe61",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "createItem", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
@@ -257,6 +275,16 @@ export interface ERC721WithAccessControl extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+
+    c_0xb22abe61(
+      c__0xb22abe61: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+
     createItem(
       tokenOwner: string,
       tokenURI: string,
@@ -347,6 +375,16 @@ export interface ERC721WithAccessControl extends BaseContract {
 
   balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  c_0x6fe40b79(
+    c__0x6fe40b79: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<void>;
+
+  c_0xb22abe61(
+    c__0xb22abe61: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<void>;
+
   createItem(
     tokenOwner: string,
     tokenURI: string,
@@ -430,6 +468,16 @@ export interface ERC721WithAccessControl extends BaseContract {
     ): Promise<void>;
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    c_0xb22abe61(
+      c__0xb22abe61: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     createItem(
       tokenOwner: string,
@@ -584,6 +632,16 @@ export interface ERC721WithAccessControl extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    c_0xb22abe61(
+      c__0xb22abe61: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     createItem(
       tokenOwner: string,
       tokenURI: string,
@@ -680,6 +738,16 @@ export interface ERC721WithAccessControl extends BaseContract {
 
     balanceOf(
       owner: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    c_0x6fe40b79(
+      c__0x6fe40b79: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    c_0xb22abe61(
+      c__0xb22abe61: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
