@@ -21,7 +21,6 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface NftMarketplaceInterface extends utils.Interface {
   functions: {
     "buyItem(uint256)": FunctionFragment;
-    "c_0x23feaf0d(bytes32)": FunctionFragment;
     "cancel(uint256)": FunctionFragment;
     "createItem(string)": FunctionFragment;
     "getTrade(uint256)": FunctionFragment;
@@ -31,10 +30,6 @@ export interface NftMarketplaceInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "buyItem",
     values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "c_0x23feaf0d",
-    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "cancel",
@@ -51,10 +46,6 @@ export interface NftMarketplaceInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "buyItem", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "c_0x23feaf0d",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "cancel", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "createItem", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getTrade", data: BytesLike): Result;
@@ -107,11 +98,6 @@ export interface NftMarketplace extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    c_0x23feaf0d(
-      c__0x23feaf0d: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
     cancel(
       tradeId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -148,11 +134,6 @@ export interface NftMarketplace extends BaseContract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  c_0x23feaf0d(
-    c__0x23feaf0d: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
   cancel(
     tradeId: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -185,11 +166,6 @@ export interface NftMarketplace extends BaseContract {
 
   callStatic: {
     buyItem(tradeId: BigNumberish, overrides?: CallOverrides): Promise<void>;
-
-    c_0x23feaf0d(
-      c__0x23feaf0d: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     cancel(tradeId: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
@@ -233,11 +209,6 @@ export interface NftMarketplace extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    c_0x23feaf0d(
-      c__0x23feaf0d: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     cancel(
       tradeId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -264,11 +235,6 @@ export interface NftMarketplace extends BaseContract {
     buyItem(
       tradeId: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    c_0x23feaf0d(
-      c__0x23feaf0d: BytesLike,
-      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     cancel(
