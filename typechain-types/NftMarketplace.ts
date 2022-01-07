@@ -25,6 +25,7 @@ export interface NftMarketplaceInterface extends utils.Interface {
     "createItem(string)": FunctionFragment;
     "getTrade(uint256)": FunctionFragment;
     "listItem(uint256,uint256)": FunctionFragment;
+    "onERC721Received(address,address,uint256,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -44,12 +45,20 @@ export interface NftMarketplaceInterface extends utils.Interface {
     functionFragment: "listItem",
     values: [BigNumberish, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "onERC721Received",
+    values: [string, string, BigNumberish, BytesLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "buyItem", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "cancel", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "createItem", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getTrade", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "listItem", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "onERC721Received",
+    data: BytesLike
+  ): Result;
 
   events: {
     "TradeStateChanged(uint256,uint8)": EventFragment;
@@ -127,6 +136,14 @@ export interface NftMarketplace extends BaseContract {
       price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
   };
 
   buyItem(
@@ -164,6 +181,14 @@ export interface NftMarketplace extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  onERC721Received(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish,
+    arg3: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   callStatic: {
     buyItem(tradeId: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
@@ -190,6 +215,14 @@ export interface NftMarketplace extends BaseContract {
       price: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<string>;
   };
 
   filters: {
@@ -229,6 +262,14 @@ export interface NftMarketplace extends BaseContract {
       price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -256,6 +297,14 @@ export interface NftMarketplace extends BaseContract {
       item: BigNumberish,
       price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    onERC721Received(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      arg3: BytesLike,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
 }

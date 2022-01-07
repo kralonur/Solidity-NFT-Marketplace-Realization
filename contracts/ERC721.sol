@@ -1,7 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+
 contract ERC721 {
+    using Address for address;
     /// Name of the token
     string private _name;
     /// Symbol of the token
@@ -121,35 +125,27 @@ contract ERC721 {
         return _tokenOwner[tokenId];
     }
 
-    /**
-     * @dev Transfers the token from 'from' to 'to' using tokenId
-     * @param from The address to transfer from
-     * @param to The address to transfer to
-     * @param tokenId The id of the token to transfer
-     */
+    /// @dev see {_safeTransfer}
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external {
+        safeTransferFrom(from, to, tokenId, "");
+    }
+
+    /// @dev see {_transfer}
     function transferFrom(
         address from,
         address to,
         uint256 tokenId
-    ) external validToken(tokenId) validAddress(to) {
+    ) external validToken(tokenId) {
         require(
             _canTransfer(tokenId),
             "Caller is not allowed to transfer this token"
         );
-        require(
-            _tokenOwner[tokenId] == from,
-            "You can't transfer someone elses token"
-        );
 
-        _addressBalance[from] -= 1;
-        _addressBalance[to] += 1;
-
-        _tokenOwner[tokenId] = to;
-
-        // Since the owner transferred the token
-        _approve(address(0), tokenId);
-
-        emit Transfer(from, to, tokenId);
+        _transfer(from, to, tokenId);
     }
 
     /**
@@ -218,6 +214,20 @@ contract ERC721 {
         return _operatorApproval[owner][operator];
     }
 
+    /// @dev see {_safeTransfer}
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    ) public validToken(tokenId) {
+        require(
+            _canTransfer(tokenId),
+            "Caller is not allowed to transfer this token"
+        );
+        _safeTransfer(from, to, tokenId, _data);
+    }
+
     /**
      * @dev Mints new token
      * @param to The address of the minted token
@@ -238,5 +248,58 @@ contract ERC721 {
         validToken(tokenId)
     {
         _tokenURI[tokenId] = newTokenURI;
+    }
+
+    /**
+     * @dev Transfers the token from 'from' to 'to' using tokenId then checks if the transfer is sucessfull
+     * @param from The address to transfer from
+     * @param to The address to transfer to
+     * @param tokenId The id of the token to transfer
+     * @param _data Extra data to send IERC721Receiver interface implementer
+     */
+    function _safeTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    ) private {
+        _transfer(from, to, tokenId);
+        if (to.isContract())
+            require(
+                IERC721Receiver(to).onERC721Received(
+                    msg.sender,
+                    from,
+                    tokenId,
+                    _data
+                ) == IERC721Receiver.onERC721Received.selector,
+                "ERC721: transfer to non ERC721Receiver implementer"
+            );
+    }
+
+    /**
+     * @dev Transfers the token from 'from' to 'to' using tokenId
+     * @param from The address to transfer from
+     * @param to The address to transfer to
+     * @param tokenId The id of the token to transfer
+     */
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) private validAddress(to) {
+        require(
+            _tokenOwner[tokenId] == from,
+            "You can't transfer someone elses token"
+        );
+
+        _addressBalance[from] -= 1;
+        _addressBalance[to] += 1;
+
+        _tokenOwner[tokenId] = to;
+
+        // Since the owner transferred the token
+        _approve(address(0), tokenId);
+
+        emit Transfer(from, to, tokenId);
     }
 }

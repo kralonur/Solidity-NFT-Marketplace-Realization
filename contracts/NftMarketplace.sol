@@ -3,12 +3,13 @@ pragma solidity ^0.8.0;
 
 import "./ERC721WithAccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 /**
  * @title A contract to trade and mint ERC721 Token
  * @author Me
  */
-contract NftMarketplace is ReentrancyGuard {
+contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
     /// Enum for holding states of the trade
     enum TradeState {
         ON_SALE,
@@ -77,7 +78,7 @@ contract NftMarketplace is ReentrancyGuard {
      * @param price Price of the listed item
      */
     function listItem(uint256 item, uint256 price) external {
-        _nftContract.transferFrom(msg.sender, address(this), item);
+        _nftContract.safeTransferFrom(msg.sender, address(this), item);
 
         Trade storage trade = _trades[_tradeId];
 
@@ -106,7 +107,7 @@ contract NftMarketplace is ReentrancyGuard {
             "The eth amount is not correct to buy"
         );
 
-        _nftContract.transferFrom(address(this), msg.sender, trade.item);
+        _nftContract.safeTransferFrom(address(this), msg.sender, trade.item);
         payable(trade.seller).transfer(msg.value);
 
         _updateTradeState(tradeId, TradeState.SOLD);
@@ -124,7 +125,7 @@ contract NftMarketplace is ReentrancyGuard {
             "Trade only can be canceled by seller"
         );
 
-        _nftContract.transferFrom(address(this), trade.seller, trade.item);
+        _nftContract.safeTransferFrom(address(this), trade.seller, trade.item);
         _updateTradeState(tradeId, TradeState.CANCELED);
     }
 
@@ -164,5 +165,15 @@ contract NftMarketplace is ReentrancyGuard {
             trade.seller,
             trade.state
         );
+    }
+
+    /// @dev see {IERC721Receiver-onERC721Received}
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) public pure override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }
