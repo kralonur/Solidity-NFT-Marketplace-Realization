@@ -20,14 +20,24 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export interface NftMarketplaceInterface extends utils.Interface {
   functions: {
+    "auctionLength()": FunctionFragment;
     "buyItem(uint256)": FunctionFragment;
     "cancel(uint256)": FunctionFragment;
+    "cancelAuction(uint256)": FunctionFragment;
     "createItem(string)": FunctionFragment;
+    "finishAuction(uint256)": FunctionFragment;
+    "getAuction(uint256)": FunctionFragment;
     "getTrade(uint256)": FunctionFragment;
     "listItem(uint256,uint256)": FunctionFragment;
+    "listItemOnAuction(uint256,uint256)": FunctionFragment;
+    "makeBid(uint256)": FunctionFragment;
     "onERC721Received(address,address,uint256,bytes)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "auctionLength",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "buyItem",
     values: [BigNumberish]
@@ -36,7 +46,19 @@ export interface NftMarketplaceInterface extends utils.Interface {
     functionFragment: "cancel",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "cancelAuction",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "createItem", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "finishAuction",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAuction",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "getTrade",
     values: [BigNumberish]
@@ -46,26 +68,71 @@ export interface NftMarketplaceInterface extends utils.Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "listItemOnAuction",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "makeBid",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "onERC721Received",
     values: [string, string, BigNumberish, BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "auctionLength",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "buyItem", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "cancel", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "cancelAuction",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "createItem", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "finishAuction",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getAuction", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getTrade", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "listItem", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "listItemOnAuction",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "makeBid", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "onERC721Received",
     data: BytesLike
   ): Result;
 
   events: {
+    "AuctionBidMade(uint256,address,uint256)": EventFragment;
+    "AuctionStateChanged(uint256,uint8)": EventFragment;
     "TradeStateChanged(uint256,uint8)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AuctionBidMade"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "AuctionStateChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TradeStateChanged"): EventFragment;
 }
+
+export type AuctionBidMadeEvent = TypedEvent<
+  [BigNumber, string, BigNumber],
+  { auctionId: BigNumber; bidderAddress: string; bidAmount: BigNumber }
+>;
+
+export type AuctionBidMadeEventFilter = TypedEventFilter<AuctionBidMadeEvent>;
+
+export type AuctionStateChangedEvent = TypedEvent<
+  [BigNumber, number],
+  { auctionId: BigNumber; state: number }
+>;
+
+export type AuctionStateChangedEventFilter =
+  TypedEventFilter<AuctionStateChangedEvent>;
 
 export type TradeStateChangedEvent = TypedEvent<
   [BigNumber, number],
@@ -102,6 +169,8 @@ export interface NftMarketplace extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    auctionLength(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     buyItem(
       tradeId: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -112,10 +181,47 @@ export interface NftMarketplace extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    cancelAuction(
+      auctionId: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     createItem(
       tokenURI: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    finishAuction(
+      auctionId: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    getAuction(
+      auctionId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        string,
+        string,
+        number
+      ] & {
+        createdAt: BigNumber;
+        stateChangedAt: BigNumber;
+        item: BigNumber;
+        bidCount: BigNumber;
+        bidStartPrice: BigNumber;
+        highestBid: BigNumber;
+        highestBidder: string;
+        seller: string;
+        state: number;
+      }
+    >;
 
     getTrade(
       tradeId: BigNumberish,
@@ -137,6 +243,17 @@ export interface NftMarketplace extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    listItemOnAuction(
+      item: BigNumberish,
+      startPrice: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    makeBid(
+      auctionId: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     onERC721Received(
       arg0: string,
       arg1: string,
@@ -145,6 +262,8 @@ export interface NftMarketplace extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
   };
+
+  auctionLength(overrides?: CallOverrides): Promise<BigNumber>;
 
   buyItem(
     tradeId: BigNumberish,
@@ -156,10 +275,47 @@ export interface NftMarketplace extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  cancelAuction(
+    auctionId: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   createItem(
     tokenURI: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  finishAuction(
+    auctionId: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  getAuction(
+    auctionId: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      string,
+      string,
+      number
+    ] & {
+      createdAt: BigNumber;
+      stateChangedAt: BigNumber;
+      item: BigNumber;
+      bidCount: BigNumber;
+      bidStartPrice: BigNumber;
+      highestBid: BigNumber;
+      highestBidder: string;
+      seller: string;
+      state: number;
+    }
+  >;
 
   getTrade(
     tradeId: BigNumberish,
@@ -181,6 +337,17 @@ export interface NftMarketplace extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  listItemOnAuction(
+    item: BigNumberish,
+    startPrice: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  makeBid(
+    auctionId: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   onERC721Received(
     arg0: string,
     arg1: string,
@@ -190,11 +357,50 @@ export interface NftMarketplace extends BaseContract {
   ): Promise<string>;
 
   callStatic: {
+    auctionLength(overrides?: CallOverrides): Promise<BigNumber>;
+
     buyItem(tradeId: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
     cancel(tradeId: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
+    cancelAuction(
+      auctionId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     createItem(tokenURI: string, overrides?: CallOverrides): Promise<void>;
+
+    finishAuction(
+      auctionId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    getAuction(
+      auctionId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        string,
+        string,
+        number
+      ] & {
+        createdAt: BigNumber;
+        stateChangedAt: BigNumber;
+        item: BigNumber;
+        bidCount: BigNumber;
+        bidStartPrice: BigNumber;
+        highestBid: BigNumber;
+        highestBidder: string;
+        seller: string;
+        state: number;
+      }
+    >;
 
     getTrade(
       tradeId: BigNumberish,
@@ -216,6 +422,14 @@ export interface NftMarketplace extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    listItemOnAuction(
+      item: BigNumberish,
+      startPrice: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    makeBid(auctionId: BigNumberish, overrides?: CallOverrides): Promise<void>;
+
     onERC721Received(
       arg0: string,
       arg1: string,
@@ -226,6 +440,26 @@ export interface NftMarketplace extends BaseContract {
   };
 
   filters: {
+    "AuctionBidMade(uint256,address,uint256)"(
+      auctionId?: BigNumberish | null,
+      bidderAddress?: string | null,
+      bidAmount?: null
+    ): AuctionBidMadeEventFilter;
+    AuctionBidMade(
+      auctionId?: BigNumberish | null,
+      bidderAddress?: string | null,
+      bidAmount?: null
+    ): AuctionBidMadeEventFilter;
+
+    "AuctionStateChanged(uint256,uint8)"(
+      auctionId?: BigNumberish | null,
+      state?: null
+    ): AuctionStateChangedEventFilter;
+    AuctionStateChanged(
+      auctionId?: BigNumberish | null,
+      state?: null
+    ): AuctionStateChangedEventFilter;
+
     "TradeStateChanged(uint256,uint8)"(
       tradeId?: BigNumberish | null,
       state?: null
@@ -237,6 +471,8 @@ export interface NftMarketplace extends BaseContract {
   };
 
   estimateGas: {
+    auctionLength(overrides?: CallOverrides): Promise<BigNumber>;
+
     buyItem(
       tradeId: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -247,9 +483,24 @@ export interface NftMarketplace extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    cancelAuction(
+      auctionId: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     createItem(
       tokenURI: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    finishAuction(
+      auctionId: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    getAuction(
+      auctionId: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     getTrade(
@@ -261,6 +512,17 @@ export interface NftMarketplace extends BaseContract {
       item: BigNumberish,
       price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    listItemOnAuction(
+      item: BigNumberish,
+      startPrice: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    makeBid(
+      auctionId: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     onERC721Received(
@@ -273,6 +535,8 @@ export interface NftMarketplace extends BaseContract {
   };
 
   populateTransaction: {
+    auctionLength(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     buyItem(
       tradeId: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -283,9 +547,24 @@ export interface NftMarketplace extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    cancelAuction(
+      auctionId: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     createItem(
       tokenURI: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    finishAuction(
+      auctionId: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    getAuction(
+      auctionId: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     getTrade(
@@ -297,6 +576,17 @@ export interface NftMarketplace extends BaseContract {
       item: BigNumberish,
       price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    listItemOnAuction(
+      item: BigNumberish,
+      startPrice: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    makeBid(
+      auctionId: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     onERC721Received(
