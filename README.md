@@ -1,6 +1,6 @@
 # Solidity NFT Marketplace Realization
 
-This contract provides platform for creating ERC721 token and selling it
+This contract provides platform for creating ERC721 token and selling it. With the new version auction functionality also added.
 
 Note: ERC721 realization is not complete!
 

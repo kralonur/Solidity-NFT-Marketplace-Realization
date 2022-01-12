@@ -17,6 +17,7 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         CANCELED
     }
 
+    /// Enum for holding states of the auction
     enum AuctionState {
         INVALID_AUCTION,
         ON_AUCTION,
@@ -42,6 +43,18 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         TradeState state;
     }
 
+    /**
+     * @dev This struct holds information about the auction
+     * @param createdAt Creation time of the auction
+     * @param stateChangedAt Latest state change time of the auction
+     * @param item The id of sold ERC721 item
+     * @param bidCount The amount of bids made to auction
+     * @param bidStartPrice The min amount to bid for the auction
+     * @param highestBid The highest bid made for auction
+     * @param highestBidder The address of highest bidder
+     * @param seller The creator of the auction
+     * @param state see {AuctionState}
+     */
     struct Auction {
         uint256 createdAt;
         uint256 stateChangedAt;
@@ -60,13 +73,16 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
     /// Current trade id
     uint256 private _tradeId;
 
+    /// Current auction id
     uint256 private _auctionId;
 
+    /// Constant auction length
     uint256 public constant auctionLength = 3 days;
 
     /// A mapping for storing trades
     mapping(uint256 => Trade) private _trades;
 
+    /// A mapping for storing auctions
     mapping(uint256 => Auction) private _auctions;
 
     constructor(address _nftContractAddress) {
@@ -80,8 +96,19 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
      */
     event TradeStateChanged(uint256 indexed tradeId, TradeState state);
 
+    /**
+     * @dev Emitted when auction state is change
+     * @param auctionId The id of the auction
+     * @param state The state of the auction
+     */
     event AuctionStateChanged(uint256 indexed auctionId, AuctionState state);
 
+    /**
+     * @dev Emitted when a bid for the auction
+     * @param auctionId The id of the auction
+     * @param bidderAddress The address of the bidder
+     * @param bidAmount The bid amount
+     */
     event AuctionBidMade(
         uint256 indexed auctionId,
         address indexed bidderAddress,
@@ -97,6 +124,10 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         _;
     }
 
+    /**
+     * @dev Modifier for checking if the auction exists
+     * @param auctionId The id of the auction
+     */
     modifier validAuction(uint256 auctionId) {
         require(_auctions[auctionId].createdAt > 0, "Auction does not exist");
         _;
@@ -128,6 +159,11 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         _updateTradeState(_tradeId++, TradeState.ON_SALE);
     }
 
+    /**
+     * @dev Lists the item on the auction for bidders to bid
+     * @param item The id of the item
+     * @param startPrice Starting price of the auction
+     */
     function listItemOnAuction(uint256 item, uint256 startPrice) external {
         _nftContract.safeTransferFrom(msg.sender, address(this), item);
 
@@ -164,6 +200,10 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         _updateTradeState(tradeId, TradeState.SOLD);
     }
 
+    /**
+     * @dev Makes bid on auction
+     * @param auctionId The id of the auction
+     */
     function makeBid(uint256 auctionId)
         external
         payable
@@ -198,6 +238,10 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         emit AuctionBidMade(auctionId, msg.sender, msg.value);
     }
 
+    /**
+     * @dev Finishes the auction
+     * @param auctionId The id of the auction
+     */
     function finishAuction(uint256 auctionId)
         external
         validAuction(auctionId)
@@ -254,6 +298,10 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         _updateTradeState(tradeId, TradeState.CANCELED);
     }
 
+    /**
+     * @dev Cancels the auction
+     * @param auctionId The id of the auction
+     */
     function cancelAuction(uint256 auctionId)
         external
         validAuction(auctionId)
@@ -326,6 +374,7 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         );
     }
 
+    /// @dev see {Auction}
     function getAuction(uint256 auctionId)
         external
         view
