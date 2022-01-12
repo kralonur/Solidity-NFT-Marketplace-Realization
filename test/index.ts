@@ -175,6 +175,229 @@ describe("NftMarketplace", function () {
     await expect(contract.cancel(tradeId))
       .to.be.revertedWith("Trade is not on sale");
   });
+
+  it("Should list item on auction", async function () {
+    const itemId = 0;
+    const auctionId = 0;
+    const bidStartPrice = ethers.utils.parseEther('0.1');
+    const state = 1; // AuctionState.ON_AUCTION;
+    const tokenURI = "https://example.com/item-id-0.json";
+
+    await expect(contract.listItemOnAuction(itemId, bidStartPrice))
+      .to.be.revertedWith("Token does not exist");
+
+    await contract.createItem(tokenURI);
+
+    await expect(contract.listItemOnAuction(itemId, bidStartPrice))
+      .to.be.revertedWith("Caller is not allowed to transfer this token");
+
+    await tokenContract.approve(contract.address, itemId);
+
+    // before listing
+    expect(await tokenContract.ownerOf(itemId))
+      .to.equal(owner.address);
+
+    await contract.listItemOnAuction(itemId, bidStartPrice);
+
+    // after listing
+    expect(await tokenContract.ownerOf(itemId))
+      .to.equal(contract.address);
+
+    const auction = await contract.getAuction(auctionId);
+
+    expect(auction.createdAt.toNumber())
+      .to.be.greaterThan(0);
+    expect(auction.stateChangedAt.toNumber())
+      .to.be.greaterThan(0);
+    expect(auction.item)
+      .to.equal(itemId);
+    expect(auction.bidCount)
+      .to.equal(0);
+    expect(auction.bidStartPrice)
+      .to.equal(bidStartPrice);
+    expect(auction.highestBid)
+      .to.equal(0);
+    expect(auction.highestBidder)
+      .to.equal(ethers.constants.AddressZero);
+    expect(auction.seller)
+      .to.equal(owner.address);
+    expect(auction.state)
+      .to.equal(state);
+  });
+
+  it("Should make bid", async function () {
+    const itemId = 0;
+    const auctionId = 0;
+    const bidStartPrice = ethers.utils.parseEther('0.1');
+    const firstBidPrice = bidStartPrice.add(100);
+    const secondBidPrice = firstBidPrice.add(100);
+    const tokenURI = "https://example.com/item-id-0.json";
+
+    await contract.createItem(tokenURI);
+    await tokenContract.approve(contract.address, itemId);
+    await contract.listItemOnAuction(itemId, bidStartPrice);
+
+    await expect(contract.connect(accounts[1]).makeBid(2, {
+      value: bidStartPrice
+    }))
+      .to.be.revertedWith("Auction does not exist");
+
+    await expect(contract.connect(accounts[1]).makeBid(auctionId, {
+      value: bidStartPrice.sub(100)
+    }))
+      .to.be.revertedWith("The eth amount is below min bid price");
+
+    // First bid
+    expect(await contract.connect(accounts[1]).makeBid(auctionId, {
+      value: firstBidPrice
+    }))
+      .to.changeEtherBalance(accounts[1], firstBidPrice.mul(-1))
+      .to.changeEtherBalance(contract, firstBidPrice);
+    const auctionFirstBid = await contract.getAuction(auctionId);
+
+    expect(auctionFirstBid.bidCount.toNumber())
+      .to.equal(1);
+    expect(auctionFirstBid.highestBid)
+      .to.equal(firstBidPrice);
+    expect(auctionFirstBid.highestBidder)
+      .to.equal(accounts[1].address);
+
+    // Second bid
+    await expect(contract.connect(accounts[2]).makeBid(auctionId, {
+      value: firstBidPrice.sub(50)
+    }))
+      .to.be.revertedWith("The eth amount is below highest bid price");
+
+    expect(await contract.connect(accounts[2]).makeBid(auctionId, {
+      value: secondBidPrice
+    }))
+      .to.changeEtherBalance(accounts[2], secondBidPrice.mul(-1))
+      .to.changeEtherBalance(accounts[1], firstBidPrice)
+      .to.changeEtherBalance(contract, 100);
+    const auctionSecondBid = await contract.getAuction(auctionId);
+
+    expect(auctionSecondBid.bidCount.toNumber())
+      .to.equal(2);
+    expect(auctionSecondBid.highestBid)
+      .to.equal(secondBidPrice);
+    expect(auctionSecondBid.highestBidder)
+      .to.equal(accounts[2].address);
+
+    // After 3 days passed
+    await simulateTimePassed();
+    await expect(contract.connect(accounts[3]).makeBid(auctionId, {
+      value: secondBidPrice.add(100)
+    }))
+      .to.be.revertedWith("Too late to make bid");
+
+    // After auction finished
+    await contract.finishAuction(auctionId);
+    await expect(contract.connect(accounts[3]).makeBid(auctionId, {
+      value: secondBidPrice.add(100)
+    }))
+      .to.be.revertedWith("Auction is not active");
+  });
+
+  it("Should finish auction (2 bidders)", async function () {
+    const itemId = 0;
+    const auctionId = 0;
+    const bidStartPrice = ethers.utils.parseEther('0.1');
+    const firstBidPrice = bidStartPrice.add(100);
+    const secondBidPrice = firstBidPrice.add(100);
+    const tokenURI = "https://example.com/item-id-0.json";
+
+    await contract.createItem(tokenURI);
+    await tokenContract.approve(contract.address, itemId);
+    await contract.listItemOnAuction(itemId, bidStartPrice);
+
+    await contract.connect(accounts[1]).makeBid(auctionId, {
+      value: firstBidPrice
+    });
+    await contract.connect(accounts[2]).makeBid(auctionId, {
+      value: secondBidPrice
+    });
+
+    await expect(contract.finishAuction(auctionId))
+      .to.be.revertedWith("Auction is too early to finish");
+
+    // After 3 days passed
+    await simulateTimePassed();
+    await expect(contract.connect(accounts[2]).finishAuction(itemId))
+      .to.be.revertedWith("Auction only can be finished by seller");
+
+    // After auction finished
+    expect(await contract.finishAuction(auctionId))
+      .to.changeEtherBalance(contract, secondBidPrice.mul(-1))
+      .to.changeEtherBalance(owner, secondBidPrice);
+    expect(await tokenContract.ownerOf(itemId))
+      .to.equal(accounts[2].address);
+    const auction = await contract.getAuction(auctionId);
+
+    expect(auction.state)
+      .to.equal(2); //AuctionState.SOLD
+
+    await expect(contract.finishAuction(auctionId))
+      .to.be.revertedWith("Auction is not active");
+  });
+
+  it("Should finish auction (1 bidder)", async function () {
+    const itemId = 0;
+    const auctionId = 0;
+    const bidStartPrice = ethers.utils.parseEther('0.1');
+    const firstBidPrice = bidStartPrice.add(100);
+    const tokenURI = "https://example.com/item-id-0.json";
+
+    await contract.createItem(tokenURI);
+    await tokenContract.approve(contract.address, itemId);
+    await contract.listItemOnAuction(itemId, bidStartPrice);
+
+    await contract.connect(accounts[1]).makeBid(auctionId, {
+      value: firstBidPrice
+    });
+    await simulateTimePassed();
+
+    // After auction finished
+    expect(await contract.finishAuction(auctionId))
+      .to.changeEtherBalance(contract, firstBidPrice.mul(-1))
+      .to.changeEtherBalance(accounts[1], firstBidPrice);
+    expect(await tokenContract.ownerOf(itemId))
+      .to.equal(owner.address);
+    const auction = await contract.getAuction(auctionId);
+
+    expect(auction.state)
+      .to.equal(0); //AuctionState.INVALID_AUCTION
+  });
+
+  it("Should cancel auction", async function () {
+    const itemId = 0;
+    const auctionId = 0;
+    const bidStartPrice = ethers.utils.parseEther('0.1');
+    const firstBidPrice = bidStartPrice.add(100);
+    const tokenURI = "https://example.com/item-id-0.json";
+
+    await contract.createItem(tokenURI);
+    await tokenContract.approve(contract.address, itemId);
+    await contract.listItemOnAuction(itemId, bidStartPrice);
+
+    await contract.connect(accounts[1]).makeBid(auctionId, {
+      value: firstBidPrice
+    });
+
+    await expect(contract.cancelAuction(auctionId))
+      .to.be.revertedWith("Auction is too early to cancel");
+
+    // After 3 days passed
+    await simulateTimePassed();
+    await expect(contract.connect(accounts[2]).cancelAuction(auctionId))
+      .to.be.revertedWith("Auction only can be canceled by seller");
+
+    await contract.cancelAuction(auctionId);
+    const auction = await contract.getAuction(auctionId);
+
+    expect(auction.state)
+      .to.equal(3); //AuctionState.CANCELED
+
+  });
 });
 
 async function getTokenContract(owner: SignerWithAddress) {
@@ -183,4 +406,9 @@ async function getTokenContract(owner: SignerWithAddress) {
   await tokenContract.deployed();
 
   return tokenContract;
+}
+
+async function simulateTimePassed() {
+  const duration = 3 * (60 * 60 * 24); // 3days is standard
+  await ethers.provider.send('evm_increaseTime', [duration]);
 }
