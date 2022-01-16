@@ -2,7 +2,7 @@
 
 This contract provides platform for creating ERC721 token and selling it. With the new version auction functionality also added.
 
-Note: ERC721 realization is not complete!
+With new version , you can also use ERC1155Marketplace for creating ERC1155 token and selling it. But same logic on NftMarketplace is being used so ERC1155Marketplace will create 1 token each time and sell 1 token each time (this is desired functionality and can be changed).
 
 ## Development
 
@@ -10,7 +10,7 @@ The contract is written with solidity.
 
 Hardhat development environment being used to write this contract.
 
-The test coverage is %100 for NftMarketplace and ERC721WithAccessControl(result from solidity-coverage).
+The test coverage is %100 for NftMarketplace,ERC1155Marketplace, ERC721WithAccessControl(result from solidity-coverage).
 
 For linting solhint and prettier is being used.
 
