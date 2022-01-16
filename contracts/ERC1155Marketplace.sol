@@ -1,15 +1,15 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./ERC721WithAccessControl.sol";
+import "./ERC1155WithAccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 /**
  * @title A contract to trade and mint ERC721 Token
  * @author Me
  */
-contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
+contract ERC1155Marketplace is ERC1155Holder, ReentrancyGuard {
     /// Enum for holding states of the trade
     enum TradeState {
         ON_SALE,
@@ -29,7 +29,7 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
      * @dev This struct holds information about the trade
      * @param createdAt Creation time of the trade
      * @param stateChangedAt Latest state change time of the trade
-     * @param item The id of sold ERC721 item
+     * @param item The id of sold ERC1155 item
      * @param price The price of the item
      * @param seller The creator of the trade
      * @param state see {TradeState}
@@ -47,7 +47,7 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
      * @dev This struct holds information about the auction
      * @param createdAt Creation time of the auction
      * @param stateChangedAt Latest state change time of the auction
-     * @param item The id of sold ERC721 item
+     * @param item The id of sold ERC1155 item
      * @param bidCount The amount of bids made to auction
      * @param bidStartPrice The min amount to bid for the auction
      * @param highestBid The highest bid made for auction
@@ -67,8 +67,8 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         AuctionState state;
     }
 
-    /// ERC721 Token with access control
-    ERC721WithAccessControl private _nftContract;
+    /// ERC1155 Token with access control
+    ERC1155WithAccessControl private _nftContract;
 
     /// Current trade id
     uint256 private _tradeId;
@@ -86,7 +86,7 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
     mapping(uint256 => Auction) private _auctions;
 
     constructor(address _nftContractAddress) {
-        _nftContract = ERC721WithAccessControl(_nftContractAddress);
+        _nftContract = ERC1155WithAccessControl(_nftContractAddress);
     }
 
     /**
@@ -133,12 +133,8 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         _;
     }
 
-    /**
-     * @dev Creates new item using the ERC721 contract
-     * @param tokenURI The URI of the created contract
-     */
-    function createItem(string memory tokenURI) external {
-        _nftContract.createItem(msg.sender, tokenURI);
+    function createItem() external {
+        _nftContract.createItem(msg.sender);
     }
 
     /**
@@ -147,7 +143,7 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
      * @param price Price of the listed item
      */
     function listItem(uint256 item, uint256 price) external {
-        _nftContract.safeTransferFrom(msg.sender, address(this), item);
+        _nftContract.safeTransferFrom(msg.sender, address(this), item, 1, "");
 
         Trade storage trade = _trades[_tradeId];
 
@@ -165,7 +161,7 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
      * @param startPrice Starting price of the auction
      */
     function listItemOnAuction(uint256 item, uint256 startPrice) external {
-        _nftContract.safeTransferFrom(msg.sender, address(this), item);
+        _nftContract.safeTransferFrom(msg.sender, address(this), item, 1, "");
 
         Auction storage auction = _auctions[_auctionId];
 
@@ -194,7 +190,13 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
             "The eth amount is not correct to buy"
         );
 
-        _nftContract.safeTransferFrom(address(this), msg.sender, trade.item);
+        _nftContract.safeTransferFrom(
+            address(this),
+            msg.sender,
+            trade.item,
+            1,
+            ""
+        );
         payable(trade.seller).transfer(msg.value);
 
         _updateTradeState(tradeId, TradeState.SOLD);
@@ -266,7 +268,9 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
             _nftContract.safeTransferFrom(
                 address(this),
                 auction.seller,
-                auction.item
+                auction.item,
+                1,
+                ""
             );
             _updateAuctionState(auctionId, AuctionState.INVALID_AUCTION);
             if (auction.highestBidder != address(0))
@@ -275,7 +279,9 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
             _nftContract.safeTransferFrom(
                 address(this),
                 auction.highestBidder,
-                auction.item
+                auction.item,
+                1,
+                ""
             );
             _updateAuctionState(auctionId, AuctionState.SOLD);
             payable(auction.seller).transfer(auction.highestBid);
@@ -294,7 +300,13 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
             "Trade only can be canceled by seller"
         );
 
-        _nftContract.safeTransferFrom(address(this), trade.seller, trade.item);
+        _nftContract.safeTransferFrom(
+            address(this),
+            trade.seller,
+            trade.item,
+            1,
+            ""
+        );
         _updateTradeState(tradeId, TradeState.CANCELED);
     }
 
@@ -320,7 +332,9 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
         _nftContract.safeTransferFrom(
             address(this),
             auction.seller,
-            auction.item
+            auction.item,
+            1,
+            ""
         );
         if (auction.highestBidder != address(0))
             payable(auction.highestBidder).transfer(auction.highestBid);
@@ -409,15 +423,5 @@ contract NftMarketplace is IERC721Receiver, ReentrancyGuard {
             auction.seller,
             auction.state
         );
-    }
-
-    /// @dev see {IERC721Receiver-onERC721Received}
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) public pure override returns (bytes4) {
-        return this.onERC721Received.selector;
     }
 }
