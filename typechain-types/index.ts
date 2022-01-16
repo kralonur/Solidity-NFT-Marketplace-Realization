@@ -3,18 +3,34 @@
 /* eslint-disable */
 export type { AccessControl } from "./AccessControl";
 export type { IAccessControl } from "./IAccessControl";
+export type { ERC1155 } from "./ERC1155";
+export type { IERC1155MetadataURI } from "./IERC1155MetadataURI";
+export type { IERC1155 } from "./IERC1155";
+export type { IERC1155Receiver } from "./IERC1155Receiver";
+export type { ERC1155Holder } from "./ERC1155Holder";
+export type { ERC1155Receiver } from "./ERC1155Receiver";
 export type { IERC721Receiver } from "./IERC721Receiver";
 export type { ERC165 } from "./ERC165";
 export type { IERC165 } from "./IERC165";
+export type { ERC1155Marketplace } from "./ERC1155Marketplace";
+export type { ERC1155WithAccessControl } from "./ERC1155WithAccessControl";
 export type { ERC721 } from "./ERC721";
 export type { ERC721WithAccessControl } from "./ERC721WithAccessControl";
 export type { NftMarketplace } from "./NftMarketplace";
 
 export { AccessControl__factory } from "./factories/AccessControl__factory";
 export { IAccessControl__factory } from "./factories/IAccessControl__factory";
+export { ERC1155__factory } from "./factories/ERC1155__factory";
+export { IERC1155MetadataURI__factory } from "./factories/IERC1155MetadataURI__factory";
+export { IERC1155__factory } from "./factories/IERC1155__factory";
+export { IERC1155Receiver__factory } from "./factories/IERC1155Receiver__factory";
+export { ERC1155Holder__factory } from "./factories/ERC1155Holder__factory";
+export { ERC1155Receiver__factory } from "./factories/ERC1155Receiver__factory";
 export { IERC721Receiver__factory } from "./factories/IERC721Receiver__factory";
 export { ERC165__factory } from "./factories/ERC165__factory";
 export { IERC165__factory } from "./factories/IERC165__factory";
+export { ERC1155Marketplace__factory } from "./factories/ERC1155Marketplace__factory";
+export { ERC1155WithAccessControl__factory } from "./factories/ERC1155WithAccessControl__factory";
 export { ERC721__factory } from "./factories/ERC721__factory";
 export { ERC721WithAccessControl__factory } from "./factories/ERC721WithAccessControl__factory";
 export { NftMarketplace__factory } from "./factories/NftMarketplace__factory";
